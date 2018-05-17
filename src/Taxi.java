@@ -16,9 +16,27 @@ public class Taxi extends Thread{
     }
 
     public void request(Person p){
-        passangers.add(p);
-        if(){}
-        requests--;
+        // passangers.add(p);
+        if(toHeadQuarters){
+            if(stop-p.getCurrentStop>0){
+            passangers.add(stop-p.getCurrentStop(),p);
+            }
+            else{
+                passangers.add(p);
+            }
+            requests--;
+        }
+        else if(!toHeadQuarters){
+            if(stop-p.getCurrentStop<0){
+                passangers.add(((stop-p.getCurrentStop())*-1),p);
+                requests++;
+            }
+            else{
+                passangers.add(p);
+                requests++;
+            }
+        }
+        
         
     }
 
