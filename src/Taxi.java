@@ -1,5 +1,6 @@
 import java.util.*;
 
+public static class Taxi{
 //while taxi is operating:
 //  Accept requests/hails from people
 //  Store them using (person number, where they are, where they are going)
@@ -14,3 +15,5 @@ import java.util.*;
 //if no one has requested:
 //  stay in that stop until someone requests. 
 //  change your current dirrectio to the first request.
+
+}
