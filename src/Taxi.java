@@ -4,8 +4,9 @@ import java.util.concurrent.Semaphore;
 public static class Taxi{
 
 private static ArrayList <Person> requests;
+private static ArrayList<Person> dropOffs;
 private static int maxPeople;
-private static Semaphore availableSeats;
+private static Semaphore time;
 private static int branches;
 private static int currentStop;
 private static boolean toHeadQuarters;
@@ -13,10 +14,13 @@ private static boolean toHeadQuarters;
 //  Store them using (person number, where they are, where they are going)
 //  Sort them by how close they are relative to where you are going
     public Taxi(int numPeople, int numBranches){
-        availableSeats = new Semaphore(numPeople);
+        availableSeats = new Semaphore(1, true);
+        maxPeople = numPeople;
         branches = numBranches;
         currentStop =0;
         toHeadQuarters=false;
+        requests = new ArrayList<Person>();
+        dropOffs = new ArrayList<Person>();
     }
 //while taxi is operating/Accepting hails:
     public static void hail(Person newPerson){
@@ -27,20 +31,19 @@ private static boolean toHeadQuarters;
             else{
                 requests.add(newPerson);
             }
-            availableSeats--;
+            
         }
         else if(!toHeadQuarters){
             if(stop-newPerson.getCurrentStop<0){
                 requests.add(((stop-newPerson.getCurrentStop())*-1),newPerson);
-                availableSeats++;
             }
             else{
                 requests.add(newPerson);
-                availableSeats++;
             }
         } 
     } 
 
+    public static void run(){
 //for every person in the sorted queue :
 //  pick them up
 //  add one minute to the time
@@ -51,5 +54,10 @@ private static boolean toHeadQuarters;
 //if no one has requested:
 //  stay in that stop until someone requests. 
 //  change your current dirrectio to the first request.
+    }
 
+    public static String checkPersonStatus(Person person){
+        if(dropOffs.contains(person)){return ("droppedOff");}
+        else if(requests.contains(person)){return ("pickedUp");}
+    }
 }

@@ -35,14 +35,16 @@ public class Person extends Thread{
             this.nextStop=stops.get(currentStopNumber+1);
         //  hail for taxi with yourself
             Taxi.hail(this);  
-            if(!pickedUp){
-                Taxi.checkPersonStatus(this);
+            while(!pickedUp){
+               String pickUp = Taxi.checkPersonStatus(this);
+               if (pickUp.equals("pickedUp")){pickedUp=true;}
             }
             Thread.sleep(17);
         //  if dropped off
         //      hail again.
             while(!droppedOff){
-                Taxi.checkPersonStatus(this);
+                String dropOff =Taxi.checkPersonStatus(this);
+                if (dropOff.equals("droppedOff")){droppedOff=true;}
             }
             Thread.sleep(17*stop[1]);
             
