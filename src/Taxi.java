@@ -1,56 +1,16 @@
 import java.util.*;
 
-
-public class Taxi extends Thread{
-    
-    private int requests;
-    private int stop;
-    private boolean toHeadQuarters;         //Keeps track if taxi is going to heard quarters or to the furthest branch
-    ArrayList<Person> passangers;
-    ArrayList<Person> dropOff;
-
-    public Taxi(int maxPassangers){
-        requests = maxPassangers;
-        toHeadQuarters=false;
-        stop=0;
-    }
-
-    public void request(Person p){
-        // passangers.add(p);
-        if(toHeadQuarters){
-            if(stop-p.getCurrentStop>0){
-            passangers.add(stop-p.getCurrentStop(),p);
-            }
-            else{
-                passangers.add(p);
-            }
-            requests--;
-        }
-        else if(!toHeadQuarters){
-            if(stop-p.getCurrentStop<0){
-                passangers.add(((stop-p.getCurrentStop())*-1),p);
-                requests++;
-            }
-            else{
-                passangers.add(p);
-                requests++;
-            }
-        }
-        
-        
-    }
-
-    public void run(){
-        for (Person person: passangers){
-            if(person.getDeparture()<this.stop && toHeadQuarters){
-                dropOff.add(person);
-                passangers.remove(person);
-                signal();
-
-            }
-            else if(){
-
-            }
-        }
-    }
-}
+//while taxi is operating:
+//  Accept requests/hails from people
+//  Store them using (person number, where they are, where they are going)
+//  Sort them by how close they are relative to where you are going
+//for every person in the sorted queue :
+//  pick them up
+//  add one minute to the time
+//  if there is one person in the taxi
+//      drop them off, check if there is someone who needs to be picked up while dropping of aperson.
+//  Person can be picked up if they are in the dirrection of your drop off branch
+// Change your  stop to current drop off or pick up stop
+//if no one has requested:
+//  stay in that stop until someone requests. 
+//  change your current dirrectio to the first request.
