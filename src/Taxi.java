@@ -1,10 +1,46 @@
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 public static class Taxi{
-//while taxi is operating:
+
+private static ArrayList <Person> requests;
+private static int maxPeople;
+private static Semaphore availableSeats;
+private static int branches;
+private static int currentStop;
+private static boolean toHeadQuarters;
 //  Accept requests/hails from people
 //  Store them using (person number, where they are, where they are going)
 //  Sort them by how close they are relative to where you are going
+    public Taxi(int numPeople, int numBranches){
+        availableSeats = new Semaphore(numPeople);
+        branches = numBranches;
+        currentStop =0;
+        toHeadQuarters=false;
+    }
+//while taxi is operating/Accepting hails:
+    public static void hail(Person newPerson){
+        if(toHeadQuarters){
+            if(stop-newPerson.getCurrentStop>0){
+            requests.add(stop-newPerson.getCurrentStop(),newPerson);
+            }
+            else{
+                requests.add(newPerson);
+            }
+            availableSeats--;
+        }
+        else if(!toHeadQuarters){
+            if(stop-newPerson.getCurrentStop<0){
+                requests.add(((stop-newPerson.getCurrentStop())*-1),newPerson);
+                availableSeats++;
+            }
+            else{
+                requests.add(newPerson);
+                availableSeats++;
+            }
+        } 
+    } 
+
 //for every person in the sorted queue :
 //  pick them up
 //  add one minute to the time

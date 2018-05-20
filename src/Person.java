@@ -2,9 +2,10 @@ import java.utils.*;
 
 public class Person extends Thread{
     public static int time;
-    int id;
+    private int id;
     ArrayList<int[]> stops;
-    int currentStop;
+    private int currentStop;
+    private int nextStop;
     boolean droppedOff,pickedUp;
 //Accept all the hails that would be called by that person and the time they would spend at each brunch;
     public Person(String schedule){
@@ -22,26 +23,34 @@ public class Person extends Thread{
         }
         this.droppedOff=false;
         this.pickedUp = false;
+        nextStop = stops.get(1)[0];
     }
 
     public void run(){
     //For each new bruch 
+        int currentStopNumber;
         for(int[] stop: stops){
-        //  hail for taxi with your (current location, next location)
-            Taxi.hail(id, currentStop, stop[0]);  
+            currentStopNumber++;
+            this.currentStop=stop[0];
+            this.nextStop=stops.get(currentStopNumber+1);
+        //  hail for taxi with yourself
+            Taxi.hail(this);  
             if(!pickedUp){
-                Taxi.checkPersonStatus(this.id,stop[0]);
+                Taxi.checkPersonStatus(this);
             }
             Thread.sleep(17);
         //  if dropped off
         //      hail again.
             while(!droppedOff){
-                Taxi.checkPersonStatus(this.id,stop[0]);
+                Taxi.checkPersonStatus(this);
             }
             Thread.sleep(17*stop[1]);
-            this.currentStop=stop[0];
+            
+
         }
         
     }
 
+    public int getCurrentStop(){return this.currentStop;}
+    public int getNextStop(){return this.nextStop;}
 }
