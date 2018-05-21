@@ -1,12 +1,14 @@
+import java.util.concurrent.Semaphore;
 import java.utils.*;
 
 public class Person extends Thread{
     public static int time;
     private int id;
-    ArrayList<int[]> stops;
+    private ArrayList<int[]> stops;
     private int currentStop;
     private int nextStop;
-    boolean droppedOff,pickedUp;
+    private boolean droppedOff,pickedUp;
+    private Semaphore queue;
 //Accept all the hails that would be called by that person and the time they would spend at each brunch;
     public Person(String schedule){
         currentStop=0;
@@ -22,8 +24,10 @@ public class Person extends Thread{
             stops.add(a);
         }
         this.droppedOff=false;
+            // Thread.sleep(17);
         this.pickedUp = false;
         nextStop = stops.get(1)[0];
+        queue= new Semaphore(1,true);
     }
 
     public void run(){
@@ -39,7 +43,7 @@ public class Person extends Thread{
                String pickUp = Taxi.checkPersonStatus(this);
                if (pickUp.equals("pickedUp")){pickedUp=true;}
             }
-            Thread.sleep(17);
+            Taxi.advanceTime(1);
         //  if dropped off
         //      hail again.
             while(!droppedOff){
@@ -47,6 +51,7 @@ public class Person extends Thread{
                 if (dropOff.equals("droppedOff")){droppedOff=true;}
             }
             Thread.sleep(17*stop[1]);
+            Taxi.advanceTime(stop[1]);
             
 
         }
@@ -55,4 +60,6 @@ public class Person extends Thread{
 
     public int getCurrentStop(){return this.currentStop;}
     public int getNextStop(){return this.nextStop;}
+
+   
 }
