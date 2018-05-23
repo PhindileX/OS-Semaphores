@@ -5,14 +5,28 @@ public class Simulator{
     public static void main(String[] args){
         int noOfPeople;
         int noOfBranches;
-        Arraylist<String[]> peopleAndStops = new ArrayList<String[]>();
-        File file = new File("../lib/input.txt");
-        Scanner inputFile = new Scanner(file);
-        noOfPeople = input.getNext();
-        noOfBranches = input.getNext();
-        while(inputFile.hasNext()){
-            peopleAndStops.add(input.getNext());
+        ArrayList<Person> peopleAndStops = new ArrayList<Person>();
+        try{
+            File file = new File("lib/input.txt");
+            Scanner input = new Scanner(file);
+            noOfPeople = Integer.parseInt(input.nextLine());
+            noOfBranches = Integer.parseInt(input.nextLine());
+            while(input.hasNext()){
+               
+                // System.out.println(input.nextLine());
+                peopleAndStops.add(new Person(input.nextLine()));
+            }
+            Taxi.init(noOfPeople, noOfBranches);
+            for(Person person:peopleAndStops){
+                person.start();
+            }
+            Taxi.run();
+
+            
+
         }
-        
+        catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
     }
 }

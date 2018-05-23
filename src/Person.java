@@ -1,5 +1,5 @@
 import java.util.concurrent.Semaphore;
-import java.utils.*;
+import java.util.*;
 
 public class Person extends Thread{
     public static int time;
@@ -13,12 +13,14 @@ public class Person extends Thread{
     public Person(String schedule){
         currentStop=0;
         stops = new ArrayList<int[]>();
-        String hails = schedules;
-        hails.replace("(","");
-        hails.replace(")", "");
-        hails.replace(" ", "");
+        String hails = schedule;
+        hails=hails.replaceFirst(" ", ",");
+        hails=hails.replace("(","");
+        hails=hails.replace(")", "");
+        hails=hails.replace(" ", "");
         String[] hail = hails.split(",");
-        int id = (Integer)hail[0];
+        System.out.println(hails);
+        id = Integer.valueOf(hail[0]);
         for(int i=1; i<hail.length;i+=2){
             int[] a = {Integer.parseInt(hail[i]),Integer.parseInt(hail[i+1])};
             stops.add(a);
@@ -26,19 +28,22 @@ public class Person extends Thread{
         this.droppedOff=false;
             // Thread.sleep(17);
         this.pickedUp = false;
+        if(stops.size()>2){
         nextStop = stops.get(1)[0];
+        }
         queue= new Semaphore(1,true);
     }
 
     public void run(){
     //For each new bruch 
-        int currentStopNumber;
+        int currentStopNumber=0;
         for(int[] stop: stops){
             currentStopNumber++;
             this.currentStop=stop[0];
-            this.nextStop=stops.get(currentStopNumber+1);
+            if(stops.size()>1){
+            this.nextStop=stops.get(currentStopNumber+1)[0];}
         //  hail for taxi with yourself
-            Taxi.hail(this);  
+            Taxi.hail(this); 
             while(!pickedUp){
                String pickUp = Taxi.checkPersonStatus(this);
                if (pickUp.equals("pickedUp")){pickedUp=true;}
@@ -50,8 +55,13 @@ public class Person extends Thread{
                 String dropOff =Taxi.checkPersonStatus(this);
                 if (dropOff.equals("droppedOff")){droppedOff=true;}
             }
-            Thread.sleep(17*stop[1]);
-            Taxi.advanceTime(stop[1]);
+            try {
+                Thread.sleep(17*stop[1]);
+                Taxi.advanceTime(stop[1]);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
             
 
         }
@@ -59,7 +69,9 @@ public class Person extends Thread{
     }
 
     public int getCurrentStop(){return this.currentStop;}
-    public int getNextStop(){return this.nextStop;}
-
+    public int getNextStop(){
+        return this.nextStop;
+    }
+    public int getID(){return(this.id);}
    
 }

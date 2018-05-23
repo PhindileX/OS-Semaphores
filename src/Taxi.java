@@ -3,13 +3,13 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Semaphore;
 
-public static class Taxi{
+public class Taxi {
 
 private static CopyOnWriteArrayList <Person> requests;
-private static ArrayList<Person> dropOffs;
-private static ArrayList<Person> pickups;
+private static CopyOnWriteArrayList<Person> dropOffs;
+private static CopyOnWriteArrayList<Person> pickups;
 private static int maxPeople;
-private static int time;
+private static long time;
 private static Semaphore lock;
 private static int branches;
 private static int currentStop;
@@ -18,96 +18,130 @@ private static boolean toHeadQuarters;
 //  Accept requests/hails from people
 //  Store them using (person number, where they are, where they are going)
 //  Sort them by how close they are relative to where you are going
-    public Taxi(int numPeople, int numBranches){
-        availableSeats = new Semaphore(1, true);
+    public static void init(int numPeople, int numBranches){
+        lock = new Semaphore(1, true);
         maxPeople = numPeople;
         branches = numBranches;
         currentStop =0;
         toHeadQuarters=false;
-        requests = new ArrayList<Person>();
-        dropOffs = new ArrayList<Person>();
-        pickups = new ArrayList<Person>();
+        requests = new CopyOnWriteArrayList<Person>();
+        dropOffs = new CopyOnWriteArrayList<Person>();
+        pickups = new CopyOnWriteArrayList<Person>();
         time = System.currentTimeMillis();
+
     }
 //while taxi is operating/Accepting hails:
     public static void hail(Person newPerson){
         requests.add(newPerson);
+        System.out.println("branch: "+Taxi.getBranch()+" Person "+ newPerson.getID()+" hails");
     } 
 
     public static void run(){
     //for every person in the sorted queue :
     //Queue sorted by who to pick up first
-        int highestDestination=branches;
-        int lowestDestination;
-        for(Person person: requests){
-            //  if there is one person in the taxi
-            //drop them off, check if there is someone who needs to be picked up while dropping of aperson.
-            lock.acquire();
+    while(true){
+            int highestDestination=branches;
+            int lowestDestination;
             if(requests.isEmpty()){
-                requests.remove(person);
-                pickups.add(person);
-                Taxi.currentStop = person.getCurrentStop();
-                lowestDestination = person.getNextStop();
-                lock.release();
+                System.out.println("Requestst so far:");
+                System.out.println(requests.toString());
             }
-            else if (person.getCurrentStop()<highestDestination){
-                if(person.getCurrentStop()>Taxi.currentStop){
-                    Taxi.currentStop = person.getCurrentStop();
-                    pickups.add(person);
-                    lock.release();
-                }
-                else{
-                    Taxi.currentStop = person.getCurrentStop();
-                    pickups.add(Math.abs(Taxi.currentStop -person.getCurrentStop()),person);
-                    lock.release();
-                }
+            else if(!requests.isEmpty()){
+                for(Person person: requests){
+                    //  if there is one person in the taxi        run();
 
-            }   
-            else{
-                if(person.getCurrentStop()>highestDestination){
-                    pickups.add(person);
-                    Taxi.currentStop = person.getCurrentStop();
-                    lock.release();
+                    //pick them up, check if there is someone who needs to be picked up while dropping of a person.
+                    System.out.println("branch "+Taxi.getBranch()+": Taxi departs");
+                    try{
+                        lock.acquire();
+                        if(requests.size()==1){
+                            requests.remove(person);
+                            System.out.println("branch: "+person.getCurrentStop()+" Person "+person.getID()+": requests "+person.getNextStop());
+                            pickups.add(person);
+                            Taxi.currentStop = person.getCurrentStop();
+                            lowestDestination = person.getNextStop();
+                            lock.release();
+
+                        }
+                        else if (person.getCurrentStop()<highestDestination){
+                            if(person.getCurrentStop()>Taxi.currentStop){
+                                Taxi.currentStop = person.getCurrentStop();
+                                System.out.println("branch: "+person.getCurrentStop()+" Person "+person.getID()+": requests "+person.getNextStop());
+                                pickups.add(person);
+                                lock.release();
+                            }
+                            else{
+                                Taxi.currentStop = person.getCurrentStop();
+                                System.out.println("branch: "+person.getCurrentStop()+" Person "+person.getID()+": requests "+person.getNextStop());
+                                pickups.add(Math.abs(Taxi.currentStop -person.getCurrentStop()),person);
+                                lock.release();
+                            }
+
+                        }   
+                        else{
+                            if(person.getCurrentStop()>highestDestination){
+                                System.out.println("branch: "+person.getCurrentStop()+" Person "+person.getID()+": requests "+person.getNextStop());
+                                pickups.add(person);
+                                Taxi.currentStop = person.getCurrentStop();
+                                lock.release();
+                            }
+            
+                        }
+                    }
+                    catch(InterruptedException e){
+                        e.printStackTrace();
+                    }
+
+                //  add one minute to the time
+                    for(Person pickup:pickups){
+                    //  Person can be picked up if they are in the dirrection of your drop off branch
+                    dropOffs.add(pickup);
+                    currentStop=pickup.getNextStop();
+                    System.out.println("branch:"+Taxi.getBranch()+" Person "+ pickup.getID()+" disembarks");
+                    // Change your  stop to current drop off or pick up stop
+                    //if no one has requested:
+                    //  stay in that stop until someone requests. 
+                    //  change your current dirrectio to the first request.
+                    }
                 }
-                
-                
-            }
-
-
-        //  add one minute to the time
-        
-        //  Person can be picked up if they are in the dirrection of your drop off branch
-        // Change your  stop to current drop off or pick up stop
-        //if no one has requested:
-        //  stay in that stop until someone requests. 
-        //  change your current dirrectio to the first request.
+            }    
         }
-    
+        
     }
 
     public static String checkPersonStatus(Person person){
+        
         if(dropOffs.contains(person)){return ("droppedOff");}
-        else if(requests.contains(person)){return ("pickedUp");}
+        else if(pickups.contains(person)){return ("pickedUp");}
+        else{return ("PersonNotFound");}
     }
 
     public static synchronized void advanceTime(int t){
-        lock.acquire();
-        time+=t;
-        lock.release();
+        try{
+            lock.acquire();
+            time+=t;
+            lock.release();
+        }
+        catch(InterruptedException e){e.printStackTrace();}
     }
-    public static synchronized ArrayList<Person> getRequests(){
+    public static synchronized CopyOnWriteArrayList<Person> getRequests(){
         return(requests);
     }
 
     public static synchronized void pickup(Person person){
-        lock.acquire();
-        pickups.add(person);
-        lock.release();
+        try{
+            lock.acquire();
+            pickups.add(person);
+            lock.release();
+        }
+        catch(InterruptedException e){
+            e.printStackTrace();
+        }
     }
     public static synchronized void dropOff(Person person){
-        lock.acquire();
-        pickups.remove(person);
-        dropOffs.add(person);
-        lock.release();
+        
+    }
+    public static int getBranch(){
+        return (Taxi.currentStop);
     }
 }
