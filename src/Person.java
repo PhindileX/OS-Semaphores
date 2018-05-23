@@ -7,9 +7,10 @@ public class Person extends Thread{
     private ArrayList<int[]> stops;
     private int currentStop;
     private int nextStop;
-    private boolean droppedOff,pickedUp;
-    private Semaphore queue;
-//Accept all the hails that would be called by that person and the time they would spend at each brunch;
+    private boolean droppedOff,pickedUp, isNextStop;
+    private Semaphore lock;
+    
+//Accept all the hails/stops that would be called by that person and the time they would spend at each brunch;
     public Person(String schedule){
         currentStop=0;
         stops = new ArrayList<int[]>();
@@ -28,42 +29,67 @@ public class Person extends Thread{
         this.droppedOff=false;
             // Thread.sleep(17);
         this.pickedUp = false;
-        if(stops.size()>2){
-        nextStop = stops.get(1)[0];
-        }
-        queue= new Semaphore(1,true);
+
+        // if(stops.size()>0){
+            isNextStop =true;
+        // }
+        lock= new Semaphore(1,true);
     }
 
     public void run(){
     //For each new bruch 
         int currentStopNumber=0;
-        for(int[] stop: stops){
-            currentStopNumber++;
-            this.currentStop=stop[0];
-            if(stops.size()>1){
-            this.nextStop=stops.get(currentStopNumber+1)[0];}
-        //  hail for taxi with yourself
-            Taxi.hail(this); 
-            while(!pickedUp){
-               String pickUp = Taxi.checkPersonStatus(this);
-               if (pickUp.equals("pickedUp")){pickedUp=true;}
-            }
-            Taxi.advanceTime(1);
-        //  if dropped off
-        //      hail again.
-            while(!droppedOff){
-                String dropOff =Taxi.checkPersonStatus(this);
-                if (dropOff.equals("droppedOff")){droppedOff=true;}
-            }
-            try {
-                Thread.sleep(17*stop[1]);
-                Taxi.advanceTime(stop[1]);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            
-            
+        while(isNextStop){
+            for(int[] stop: stops){
+                this.nextStop=stop[0];
+                
 
+            //  hail for taxi with yourself
+                try{
+                    lock.acquire();
+                    Taxi.hail(this);
+                    lock.release();
+                } 
+                catch(InterruptedException e){ e.printStackTrace();}
+                try{
+                    while(!pickedUp){
+                        lock.acquire();
+                        String pickUp = Taxi.checkPersonStatus(this);
+                        if (pickUp.equals("pickedUp")){pickedUp=true;}
+                        lock.release();
+                    }
+                }
+                catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+                Taxi.advanceTime(1);
+            //  if dropped off
+            //      hail again.
+                
+                while(!droppedOff){
+                    lock.tryAcquire();
+                    String dropOff =Taxi.checkPersonStatus(this);
+                    if (dropOff.equals("droppedOff")){droppedOff=true;}
+                    lock.release();
+                }
+                try {
+                    Thread.sleep(17*stop[1]);
+                    Taxi.advanceTime(stop[1]);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(stops.size()>1){
+                    this.currentStop=stop[0];
+                    currentStopNumber++;
+                }
+                if(currentStopNumber==stops.size()){
+                    isNextStop=false;
+                }
+                else if(currentStopNumber<stops.size()){
+                    isNextStop  =true;
+                }
+            }
+            System.exit(0);
         }
         
     }

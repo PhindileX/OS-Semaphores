@@ -12,7 +12,7 @@ public class Simulator{
             noOfPeople = Integer.parseInt(input.nextLine());
             noOfBranches = Integer.parseInt(input.nextLine());
             while(input.hasNext()){
-               
+            //    Sring inp =
                 // System.out.println(input.nextLine());
                 peopleAndStops.add(new Person(input.nextLine()));
             }

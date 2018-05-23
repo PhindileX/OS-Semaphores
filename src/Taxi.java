@@ -42,22 +42,29 @@ private static boolean toHeadQuarters;
     while(true){
             int highestDestination=branches;
             int lowestDestination;
-            if(requests.isEmpty()){
-                System.out.println("Requestst so far:");
-                System.out.println(requests.toString());
+            // if(requests.isEmpty()){
+            //     System.out.println("Requestst so far:");
+            //     System.out.println(requests.toString());
+            // }
+            // else 
+            try {
+                Thread.sleep(10);
+            } catch (Exception e) {
+                //TODO: handle exception
             }
-            else if(!requests.isEmpty()){
+            if(!requests.isEmpty()){
                 for(Person person: requests){
                     //  if there is one person in the taxi        run();
 
                     //pick them up, check if there is someone who needs to be picked up while dropping of a person.
-                    System.out.println("branch "+Taxi.getBranch()+": Taxi departs");
+                    System.out.println("branch: "+Taxi.getBranch()+" Taxi departs");
                     try{
                         lock.acquire();
                         if(requests.size()==1){
                             requests.remove(person);
-                            System.out.println("branch: "+person.getCurrentStop()+" Person "+person.getID()+": requests "+person.getNextStop());
+                            System.out.println("branch: "+person.getCurrentStop()+" Taxi arrives");
                             pickups.add(person);
+                            System.out.println("branch: "+person.getCurrentStop()+" Person "+person.getID()+": requests "+person.getNextStop());
                             Taxi.currentStop = person.getCurrentStop();
                             lowestDestination = person.getNextStop();
                             lock.release();
@@ -96,8 +103,9 @@ private static boolean toHeadQuarters;
                     for(Person pickup:pickups){
                     //  Person can be picked up if they are in the dirrection of your drop off branch
                     dropOffs.add(pickup);
+                    pickups.remove(pickup);
                     currentStop=pickup.getNextStop();
-                    System.out.println("branch:"+Taxi.getBranch()+" Person "+ pickup.getID()+" disembarks");
+                    System.out.println("branch: "+Taxi.getBranch()+" Person "+ pickup.getID()+" disembarks");
                     // Change your  stop to current drop off or pick up stop
                     //if no one has requested:
                     //  stay in that stop until someone requests. 
@@ -111,8 +119,9 @@ private static boolean toHeadQuarters;
 
     public static String checkPersonStatus(Person person){
         
-        if(dropOffs.contains(person)){return ("droppedOff");}
-        else if(pickups.contains(person)){return ("pickedUp");}
+       
+        if(pickups.contains(person)){return ("pickedUp");}
+        else if(dropOffs.contains(person)){return ("droppedOff");}
         else{return ("PersonNotFound");}
     }
 
